@@ -1,0 +1,22 @@
+fileFormatVersion: 2
+guid: 309b1dab901243243b486e3f06a03b06
+TrueTypeFontImporter:
+  externalObjects: {}
+  serializedVersion: 4
+  fontSize: 16
+  forceTextureCase: -2
+  characterSpacing: 0
+  characterPadding: 1
+  includeFontData: 1
+  fontNames:
+  - Morganite
+  fallbackFontReferences:
+  - {fileID: 12800000, guid: 30b4ecabed738d34a9b58f09d3868733, type: 3}
+  customCharacters: 
+  fontRenderingMode: 0
+  ascentCalculationMode: 1
+  useLegacyBoundsCalculation: 0
+  shouldRoundAdvanceValue: 1
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 

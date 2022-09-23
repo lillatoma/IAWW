@@ -22,12 +22,21 @@ public class EmpireDeck : MonoBehaviour
     
     public EmpireCard PickEmpireCard()
     {
-        int r = Random.Range(0, cards.Count);
-        
-        EmpireCard empCard = cards[r];
+        int side = FindObjectOfType<GameInfo>().side;
 
-        cards.RemoveAt(r);
-        return empCard;
+        while (true)
+        {
+            int r = Random.Range(0, cards.Count);
+
+            EmpireCard empCard = cards[r];
+
+            if (empCard.side == side)
+            {
+                cards.RemoveAt(r);
+
+                return empCard;
+            }
+        }
     }
 
 
