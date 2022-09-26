@@ -4,12 +4,18 @@ using UnityEngine;
 
 public class Player : MonoBehaviour
 {
+    public string playerName;
+
     public EmpireCard empireCard;
     public List<Card> builtCards = new List<Card>();
     public List<Card> buildzoneCards = new List<Card>();
     public List<Card> planningCards = new List<Card>();
+    public List<Card> draftingCards = new List<Card>();
 
 
+
+
+    public int selectedCard = -1;
 
 
     public int totalScore;
@@ -27,13 +33,16 @@ public class Player : MonoBehaviour
     public int sergeants;
     public int businessmen;
 
-
+    private int lastBuilt = 0;
 
 
     // Start is called before the first frame update
     void Start()
     {
         empireCard = FindObjectOfType<EmpireDeck>().PickEmpireCard();
+
+        CalculateProduction();
+        CalculateScore();
     }
 
     public int GetCardTypeCount(int type)
@@ -149,6 +158,11 @@ public class Player : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        
+        if(lastBuilt != builtCards.Count)
+        {
+            CalculateProduction();
+            CalculateScore();
+            lastBuilt = builtCards.Count;
+        }
     }
 }

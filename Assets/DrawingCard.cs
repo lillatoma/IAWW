@@ -5,11 +5,15 @@ using TMPro;
 
 public class DrawingCard : MonoBehaviour
 {
+    public Player owner;
+    public int idAtPlayer;
+
     public int idFromList;
     public bool testerCard = true;
     public Card refCard;
     public bool hidden = false;
-    
+    public bool selected = false;
+    public GameObject selectedOutline;
     public GameObject scoreObject;
     public SpriteRenderer scoreLogo;
     public GameObject scoreSergeantLogo;
@@ -25,7 +29,10 @@ public class DrawingCard : MonoBehaviour
     public SpriteRenderer specialResource;
     public TMP_Text specialText;
 
-
+    private void OnMouseDown()
+    {
+        owner.selectedCard = idAtPlayer;
+    }
 
 
     [Header("Summoners")]
@@ -64,7 +71,20 @@ public class DrawingCard : MonoBehaviour
         }
     }
 
+    private void OnDisable()
+    {
+        text.gameObject.SetActive(false);
+        specialText.gameObject.SetActive(false);
+        scoreText.gameObject.SetActive(false);
+    }
 
+    private void OnEnable()
+    {
+        if(!hidden)
+            text.gameObject.SetActive(true);
+        specialText.gameObject.SetActive(true);
+        scoreText.gameObject.SetActive(true);
+    }
     private void OnDestroy()
     {
         Destroy(scoreText.gameObject);
@@ -74,6 +94,8 @@ public class DrawingCard : MonoBehaviour
 
     public void SetupCard()
     {
+        selectedOutline.SetActive(selected);
+
         ClearElements();
         if(testerCard)
             refCard = deck.cards[idFromList];
@@ -276,7 +298,7 @@ public class DrawingCard : MonoBehaviour
 
         idFromList = 0;
 
-
+        selected = false;
         GameObject go = GameObject.Instantiate(nametextObject);
         text = go.GetComponent<TMP_Text>();
         go.transform.parent = GameObject.FindGameObjectWithTag("WorldCanvas").transform;
@@ -316,6 +338,7 @@ public class DrawingCard : MonoBehaviour
     public void AddToPlayer()
     {
         FindObjectOfType<Player>().builtCards.Add(refCard);
+
     }
 
     [ContextMenu("Add To Player Buildzone")]

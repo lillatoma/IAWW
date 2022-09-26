@@ -4,15 +4,12 @@ using UnityEngine;
 
 public class Ruleset : MonoBehaviour
 {
-    // Start is called before the first frame update
-    void Start()
-    {
-        
-    }
+    public int totalRounds;
+    public int cardsHandedRoundStart;
+    public int cardsHandedRoundStartTwo;
+    public int cardsDraftablePerRound;
+    public int crystaniteConversionReq;
 
-    // Update is called once per frame
-    void Update()
-    {
-        
-    }
+
+
 }
