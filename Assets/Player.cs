@@ -7,6 +7,10 @@ public class Player : MonoBehaviour
     public EmpireCard empireCard;
     public List<Card> builtCards = new List<Card>();
     public List<Card> buildzoneCards = new List<Card>();
+    public List<Card> planningCards = new List<Card>();
+
+
+
 
     public int totalScore;
     public int rawScore;
@@ -138,7 +142,7 @@ public class Player : MonoBehaviour
                 businessmenScore += builtCards[i].score * businessmen;
         }
 
-        totalScore = rawScore + grayScore + blackScore + greenScore + yellowScore + blueScore + sergeants + businessmenScore;
+        totalScore = rawScore + grayScore + blackScore + greenScore + yellowScore + blueScore + sergeantScore + businessmenScore;
     }
 
 

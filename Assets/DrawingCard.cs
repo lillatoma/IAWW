@@ -2,11 +2,14 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using TMPro;
-using Unity.VisualScripting;
 
 public class DrawingCard : MonoBehaviour
 {
     public int idFromList;
+    public bool testerCard = true;
+    public Card refCard;
+    public bool hidden = false;
+    
     public GameObject scoreObject;
     public SpriteRenderer scoreLogo;
     public GameObject scoreSergeantLogo;
@@ -49,6 +52,8 @@ public class DrawingCard : MonoBehaviour
     private Deck deck;
 
     private int lastId = -1;
+    private bool shouldStart = true;
+
 
     public void ClearElements()
     {
@@ -70,44 +75,48 @@ public class DrawingCard : MonoBehaviour
     public void SetupCard()
     {
         ClearElements();
-        spriteRenderer.color = gameInfo.cardtypeColor[deck.cards[idFromList].type];
-        if (deck.cards[idFromList].scoreType != -1)
+        if(testerCard)
+            refCard = deck.cards[idFromList];
+
+
+        spriteRenderer.color = gameInfo.cardtypeColor[refCard.type];
+        if (refCard.scoreType != -1)
         {
             scoreObject.SetActive(true);
             scoreText.gameObject.SetActive(true);
 
-            if (deck.cards[idFromList].scoreType == 0)
+            if (refCard.scoreType == 0)
             {
                 scoreLogo.gameObject.SetActive(false);
                 scoreSergeantLogo.gameObject.SetActive(false);
                 scoreBusinessLogo.gameObject.SetActive(false);
                 scoreText.alignment = TextAlignmentOptions.Center;
-                scoreText.text = deck.cards[idFromList].score.ToString();
+                scoreText.text = refCard.score.ToString();
             }
-            else if (deck.cards[idFromList].scoreType <= 5)
+            else if (refCard.scoreType <= 5)
             {
                 scoreLogo.gameObject.SetActive(true);
                 scoreSergeantLogo.gameObject.SetActive(false);
                 scoreBusinessLogo.gameObject.SetActive(false);
                 scoreText.alignment = TextAlignmentOptions.Left;
-                scoreText.text = "X" + deck.cards[idFromList].score;
-                scoreLogo.color = gameInfo.cardtypeColor[deck.cards[idFromList].scoreType - 1];
+                scoreText.text = "X" + refCard.score;
+                scoreLogo.color = gameInfo.cardtypeColor[refCard.scoreType - 1];
             }
-            else if (deck.cards[idFromList].scoreType == 6)
+            else if (refCard.scoreType == 6)
             {
                 scoreLogo.gameObject.SetActive(false);
                 scoreSergeantLogo.gameObject.SetActive(true);
                 scoreBusinessLogo.gameObject.SetActive(false);
                 scoreText.alignment = TextAlignmentOptions.Left;
-                scoreText.text = "X" + deck.cards[idFromList].score;
+                scoreText.text = "X" + refCard.score;
             }
-            else if (deck.cards[idFromList].scoreType == 7)
+            else if (refCard.scoreType == 7)
             {
                 scoreLogo.gameObject.SetActive(false);
                 scoreSergeantLogo.gameObject.SetActive(false);
                 scoreBusinessLogo.gameObject.SetActive(true);
                 scoreText.alignment = TextAlignmentOptions.Left;
-                scoreText.text = "X" + deck.cards[idFromList].score;
+                scoreText.text = "X" + refCard.score;
             }
         }
         else
@@ -115,12 +124,14 @@ public class DrawingCard : MonoBehaviour
             scoreObject.SetActive(false);
             scoreText.gameObject.SetActive(false);
         }
-        throwawayObject.color = gameInfo.resourcesColor[deck.cards[idFromList].throwAwayReward];
+        throwawayObject.color = gameInfo.resourcesColor[refCard.throwAwayReward];
 
-        text.text = deck.cards[idFromList].name;
-       
+        text.text = refCard.name;
 
-        if (deck.cards[idFromList].specialProduction == -1)
+        text.gameObject.SetActive(!hidden);
+
+
+        if (refCard.specialProduction == -1)
         {
             specialResource.gameObject.SetActive(false);
             specialType.gameObject.SetActive(false);
@@ -128,13 +139,13 @@ public class DrawingCard : MonoBehaviour
 
             float xSpace = 0.0575f;
 
-            for(int i = 0; i < deck.cards[idFromList].productions.Length; i++)
+            for(int i = 0; i < refCard.productions.Length; i++)
             {
                 GameObject go = Instantiate(resourceObject,transform);
-                float x = -((float)deck.cards[idFromList].productions.Length - 1f) / 2f * xSpace + i * xSpace;
+                float x = -((float)refCard.productions.Length - 1f) / 2f * xSpace + i * xSpace;
                 go.transform.position = transform.position + new Vector3(x, -0.448f, -0.1f);
 
-                go.GetComponent<SpriteRenderer>().color = gameInfo.resourcesColor[deck.cards[idFromList].productions[i]];
+                go.GetComponent<SpriteRenderer>().color = gameInfo.resourcesColor[refCard.productions[i]];
 
 
                 addedElements.Add(go);
@@ -146,18 +157,18 @@ public class DrawingCard : MonoBehaviour
             specialResource.gameObject.SetActive(true);
             specialType.gameObject.SetActive(true);
             specialText.gameObject.SetActive(true);
-            specialResource.color = gameInfo.resourcesColor[deck.cards[idFromList].productions[0]];
-            specialType.color = gameInfo.cardtypeColor[deck.cards[idFromList].specialProduction];
+            specialResource.color = gameInfo.resourcesColor[refCard.productions[0]];
+            specialType.color = gameInfo.cardtypeColor[refCard.specialProduction];
         }
 
         float yDistance = 0.103f;
 
-        for(int i = 0; i < deck.cards[idFromList].cost.Count; i++)
+        for(int i = 0; i < refCard.cost.Count; i++)
         {
-            bool satisfied = deck.cards[idFromList].built[i] != -1;
+            bool satisfied = refCard.built[i] != -1;
             float y = 0.4f - i * yDistance;
 
-            if (deck.cards[idFromList].cost[i] < 5)
+            if (refCard.cost[i] < 5)
             {
                 GameObject go;
                 if(satisfied)
@@ -167,11 +178,11 @@ public class DrawingCard : MonoBehaviour
 
                 go.transform.position = transform.position + new Vector3(-0.275f, y, -0.05f);
 
-                go.GetComponent<SpriteRenderer>().color = gameInfo.resourcesColor[deck.cards[idFromList].cost[i]];
+                go.GetComponent<SpriteRenderer>().color = gameInfo.resourcesColor[refCard.cost[i]];
 
                 addedElements.Add(go);
             }
-            else if (deck.cards[idFromList].cost[i] == 5)
+            else if (refCard.cost[i] == 5)
             {
                 GameObject go;
                 if (satisfied)
@@ -183,7 +194,7 @@ public class DrawingCard : MonoBehaviour
 
                 addedElements.Add(go);
             }
-            else if (deck.cards[idFromList].cost[i] == 6)
+            else if (refCard.cost[i] == 6)
             {
                 GameObject go;
                 if (satisfied)
@@ -195,7 +206,7 @@ public class DrawingCard : MonoBehaviour
 
                 addedElements.Add(go);
             }
-            else if (deck.cards[idFromList].cost[i] == 7)
+            else if (refCard.cost[i] == 7)
             {
                 GameObject go;
                 if (satisfied)
@@ -214,10 +225,10 @@ public class DrawingCard : MonoBehaviour
 
         float rewardX = 0.1f;
 
-        for(int i = 0; i < deck.cards[idFromList].buildReward.Length; i++)
+        for(int i = 0; i < refCard.buildReward.Length; i++)
         {
-            float x = -((float)deck.cards[idFromList].buildReward.Length - 1f) / 2 * rewardX + i * rewardX;
-            if(deck.cards[idFromList].buildReward[i] == 0)
+            float x = -((float)refCard.buildReward.Length - 1f) / 2 * rewardX + i * rewardX;
+            if(refCard.buildReward[i] == 0)
             {
                 GameObject go = Instantiate(sergeantRewardObject, transform);
 
@@ -225,7 +236,7 @@ public class DrawingCard : MonoBehaviour
 
                 addedElements.Add(go);
             }
-            else if (deck.cards[idFromList].buildReward[i] == 1)
+            else if (refCard.buildReward[i] == 1)
             {
                 GameObject go = Instantiate(businessmanRewardObject, transform);
 
@@ -233,7 +244,7 @@ public class DrawingCard : MonoBehaviour
 
                 addedElements.Add(go);
             }
-            else if (deck.cards[idFromList].buildReward[i] == 2)
+            else if (refCard.buildReward[i] == 2)
             {
                 GameObject go = Instantiate(resourceRewardObject, transform);
 
@@ -246,10 +257,19 @@ public class DrawingCard : MonoBehaviour
 
     }
 
-    
+    public void ForcedStart()
+    {
+
+        Start();
+        shouldStart = false;
+    }
+
+
     // Start is called before the first frame update
     void Start()
     {
+        if (!shouldStart)
+            return;
         gameInfo = FindObjectOfType<GameInfo>();
         spriteRenderer = GetComponent<SpriteRenderer>();
         deck = FindObjectOfType<Deck>();
@@ -285,18 +305,36 @@ public class DrawingCard : MonoBehaviour
     void UpdateTextPositions()
     {
         if(text)
-            text.transform.position = transform.position + new Vector3(0.02f, 0.393f, -0.1f);
+            text.transform.position = transform.position + new Vector3(0.02f, 0.393f, -transform.position.z / transform.localScale.x) * transform.localScale.x;
         if(scoreText)
-            scoreText.transform.position = transform.position + new Vector3(-0.25f, -0.453f, -0.1f);
+            scoreText.transform.position = transform.position + new Vector3(-0.25f, -0.453f, -transform.position.z / transform.localScale.x) * transform.localScale.x;
         if (specialText)
-            specialText.transform.position = transform.position + new Vector3(0, -0.455f, -0.1f);
+            specialText.transform.position = transform.position + new Vector3(0, -0.455f, -transform.position.z / transform.localScale.x) * transform.localScale.x;
+    }
+
+    [ContextMenu("Add To Player")]
+    public void AddToPlayer()
+    {
+        FindObjectOfType<Player>().builtCards.Add(refCard);
+    }
+
+    [ContextMenu("Add To Player Buildzone")]
+    public void AddToPlayerBuildzone()
+    {
+        FindObjectOfType<Player>().buildzoneCards.Add(refCard);
+    }
+
+    [ContextMenu("Add To Player Planning")]
+    public void AddToPlayerPlanning()
+    {
+        FindObjectOfType<Player>().planningCards.Add(refCard);
     }
 
     // Update is called once per frame
     void Update()
     {
         UpdateTextPositions();
-        if(idFromList != lastId)
+        if(idFromList != lastId && testerCard)
         {
             SetupCard();
             lastId = idFromList;

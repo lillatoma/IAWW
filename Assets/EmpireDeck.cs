@@ -7,6 +7,7 @@ using UnityEngine;
 public class EmpireCard
 {
     public string name;
+    public Color color;
     public int side;
     public int[] production; //0 - gray, 1 - black, 2 - green, 3 - yellow, 4 - blue
     public int scoreType = -1; //-1 none, 0 - raw, 1 - gray, 2 - black, 3 - green, 4 - yellow, 5 - blue, 6 - sergeant, 7 - businessman

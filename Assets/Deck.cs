@@ -29,6 +29,7 @@ public class Card
 
 public class Deck : MonoBehaviour
 {
+    public bool shouldShuffle = false;
     public List<Card> cards = new List<Card>();
 
     public List<Card> throwawayCards = new List<Card>();
@@ -47,8 +48,8 @@ public class Deck : MonoBehaviour
 
         foreach (Card card in cards)
             card.Start();
-
-        Shuffle();
+        if(shouldShuffle)
+            Shuffle();
     }
 
     // Update is called once per frame
@@ -57,7 +58,7 @@ public class Deck : MonoBehaviour
         
     }
 
-
+    [ContextMenu("Shuffle Deck")]
     public void Shuffle()
     {
         List<int> indexes = new List<int>();
@@ -65,7 +66,7 @@ public class Deck : MonoBehaviour
         for (int i = 0; i < cards.Count; i++)
             indexes.Add(i);
 
-        Card[] newCards = new Card[cards.Count];
+        List<Card> newCards = new List<Card>();
 
         for(int i = 0; i < cards.Count; i++)
         {
@@ -73,8 +74,10 @@ public class Deck : MonoBehaviour
             int idx = indexes[r];
             indexes.RemoveAt(r);
 
-            newCards[i] = cards[idx];
+            newCards.Add(cards[idx]);
         }
+
+        cards = newCards;
     }
 
 }
