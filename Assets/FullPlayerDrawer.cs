@@ -15,9 +15,27 @@ public class FullPlayerDrawer : MonoBehaviour
 
     private Player lastPlayer;
     private DrawingEmpire empireCard;
+    private int lastBuildzone;
     private int lastCardCount;
     private int lastSelected;
 
+    public void DoPlayerChoose()
+    {
+        if(player.selectedCard >= 0)
+            player.DraftCard(player.selectedCard);
+    }
+
+    public void DoPlayerRecycle()
+    {
+        if (player.selectedCard >= 0)
+            player.RecycleCard(player.selectedCard);
+    }
+
+    public void DoPlayerBuild()
+    {
+        if (player.selectedCard >= 0)
+            player.BuildCard(player.selectedCard);
+    }
 
     public void InactivateCardObjects(int startIndex)
     {
@@ -105,13 +123,40 @@ public class FullPlayerDrawer : MonoBehaviour
         return startIndex;
     }
 
+    public int DrawDraftingCards(int startIndex)
+    {
+        for (int i = 0; i < player.draftingCards.Count; i++)
+        {
+            DrawingCard currentCard = CreateCard(startIndex);
+            currentCard.transform.localScale = new Vector3(1f, 1f, 1f);
 
+            currentCard.ForcedStart();
+            currentCard.testerCard = false;
+            float xLength = 4.905f / (player.draftingCards.Count - 1);
+            if (xLength > 0.63f)
+                xLength = 0.63f;
+            currentCard.transform.position = new Vector3(-1.785f, 0.762f, 0f) + i * new Vector3(xLength, 0, 0.25f);
+            currentCard.refCard = player.draftingCards[i];
+
+
+            currentCard.idAtPlayer = startIndex;
+            currentCard.owner = player;
+            currentCard.selected = startIndex == player.selectedCard;
+
+            currentCard.SetupCard();
+            currentCard.transform.localScale = new Vector3(0.9f, 0.9f, 0.9f);
+            startIndex++;
+        }
+
+        return startIndex;
+    }
     public void DrawCards()
     {
         int index = 0;
         index = DrawBuiltCards(index);
-        index = DrawPlanningCards(index);
         index = DrawBuildzoneCards(index);
+        index = DrawPlanningCards(index);
+        index = DrawDraftingCards(index);
         InactivateCardObjects(index);
     }
 
@@ -148,12 +193,14 @@ public class FullPlayerDrawer : MonoBehaviour
             Debug.Log("Player is different");
 
         if (player != lastPlayer || lastCardCount != (player.builtCards.Count + player.buildzoneCards.Count + player.planningCards.Count)
-            || player.selectedCard != lastSelected)
+            || player.selectedCard != lastSelected || lastBuildzone != player.buildzoneCards.Count)
         {
+
             empireCard.currentPlayer = player;
             empireCard.SetupCard();
             lastPlayer = player;
             lastCardCount = player.builtCards.Count + player.buildzoneCards.Count + player.planningCards.Count;
+            lastBuildzone = player.buildzoneCards.Count;
             if (lastSelected != player.selectedCard)
                 lastSelected = player.selectedCard;
             else player.selectedCard = -1;

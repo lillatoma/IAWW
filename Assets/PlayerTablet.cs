@@ -31,6 +31,7 @@ public class PlayerTablet : MonoBehaviour
 
     public void SwapPlayer()
     {
+        FindObjectOfType<FullPlayerDrawer>().player.selectedCard = -1;
         FindObjectOfType<FullPlayerDrawer>().player = linkedPlayer;
     }
 

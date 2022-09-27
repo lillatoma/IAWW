@@ -1,10 +1,14 @@
 using System.Collections;
 using System.Collections.Generic;
+using UnityEditor.Build.Content;
 using UnityEngine;
 
 public class Player : MonoBehaviour
 {
+    public bool hasValidated = false;
+
     public string playerName;
+    public bool botControlled = false;
 
     public EmpireCard empireCard;
     public List<Card> builtCards = new List<Card>();
@@ -28,22 +32,196 @@ public class Player : MonoBehaviour
     public int sergeantScore;
     public int businessmenScore;
     public int[] production = new int[5];
-    public int[] reservedResources;
+    public int[] unusedResources = new int[5];
+    public List<int> conversionResources = new List<int>();
     public int crystanites;
     public int sergeants;
     public int businessmen;
 
     private int lastBuilt = 0;
+    private GameManager gameManager;
+    private Deck deck;
+    private Ruleset ruleset;
 
+
+    public void AutoValidate()
+    {
+        if (gameManager.roundState % 7 == 1 && planningCards.Count == 0)
+        {
+            hasValidated = true;
+            for (int i = 0; i < 5; i++)
+                if (unusedResources[i] > 0)
+                    hasValidated = false;
+        }
+    }
+
+    public void AddToConversion(int res)
+    {
+        conversionResources.Add(res);
+
+        if(conversionResources.Count == ruleset.crystaniteConversionReq)
+        {
+            conversionResources.Clear();
+            crystanites++;
+        }
+    }
 
     // Start is called before the first frame update
     void Start()
     {
         empireCard = FindObjectOfType<EmpireDeck>().PickEmpireCard();
+        gameManager = FindObjectOfType<GameManager>();
+        deck = FindObjectOfType<Deck>();
+        ruleset = FindObjectOfType<Ruleset>();
 
         CalculateProduction();
         CalculateScore();
     }
+
+    public void DraftCard(int id)
+    {
+        int idx = id - (builtCards.Count + buildzoneCards.Count + planningCards.Count);
+        if (idx >= 0 && idx < draftingCards.Count)
+        {
+            planningCards.Add(draftingCards[idx]);
+            draftingCards.RemoveAt(idx);
+            hasValidated = true;
+        }
+    }
+
+    public void RecycleCard(int id)
+    {
+        int idx = id - builtCards.Count;
+        if(idx >= 0 && idx < buildzoneCards.Count)
+        {
+            if(buildzoneCards[idx].planningRound == gameManager.roundState)
+            {
+                int res = deck.ThrowCardAway(buildzoneCards[idx]);
+                unusedResources[res]++;
+                buildzoneCards.RemoveAt(idx);
+            }
+            else
+            {
+                int res = deck.ThrowCardAway(buildzoneCards[idx]);
+                AddToConversion(res);
+                buildzoneCards.RemoveAt(idx);
+            }
+        }
+       
+        else if (idx >= buildzoneCards.Count && idx < buildzoneCards.Count+planningCards.Count)
+        {
+            idx = idx - buildzoneCards.Count;
+            int res = deck.ThrowCardAway(planningCards[idx]);
+            unusedResources[res]++;
+            planningCards.RemoveAt(idx);
+        }
+
+    }
+
+    void FinishBuilding(int idx)
+    {
+        for(int i = 0; i < buildzoneCards[idx].buildReward.Length; i++)
+        {
+            if (buildzoneCards[idx].buildReward[i] == 0)
+                sergeants++;
+            else if (buildzoneCards[idx].buildReward[i] == 1)
+                businessmen++;
+            else if (buildzoneCards[idx].buildReward[i] == 2)
+                crystanites++;
+        }
+        builtCards.Add(buildzoneCards[idx]);
+        buildzoneCards.RemoveAt(idx);
+    }
+
+    public void BuildCard(int id)
+    {
+        int idx = id - builtCards.Count;
+        if(idx >= 0 && idx < buildzoneCards.Count)
+        {
+            int[] cost = new int[5] { 0, 0, 0, 0, 0 };
+            int sergeantCost = 0;
+            int businessmenCost = 0;
+            int crystaniteCost = 0;
+            for(int i = 0; i < buildzoneCards[idx].cost.Count; i++)
+            {
+                if (buildzoneCards[idx].cost[i] < 5)
+                    cost[buildzoneCards[idx].cost[i]]++;
+                else if (buildzoneCards[idx].cost[i] == 5)
+                    sergeantCost++;
+                else if (buildzoneCards[idx].cost[i] == 6)
+                    businessmenCost++;
+                else crystaniteCost++;
+            }
+
+            bool buildable = true;
+            for (int i = 0; i < 5; i++)
+                if (cost[i] > unusedResources[i])
+                    buildable = false;
+            if (sergeantCost > sergeants || businessmenCost > businessmen || crystaniteCost > crystanites)
+                buildable = false;
+
+            if(buildable)
+            {
+                for (int i = 0; i < 5; i++)
+                    unusedResources[i] -= cost[i];
+                sergeants -= sergeantCost;
+                businessmen -= businessmenCost;
+                crystanites -= crystaniteCost;
+
+                FinishBuilding(idx);
+            }
+
+        }
+
+        else if (idx >= buildzoneCards.Count && idx < buildzoneCards.Count + planningCards.Count)
+        {
+            idx = idx - buildzoneCards.Count;
+            buildzoneCards.Add(planningCards[idx]);
+            planningCards.RemoveAt(idx);
+        }
+    }
+
+    public void AddResourceToBuild(int id, int type)
+    {
+        int idx = id - builtCards.Count;
+        if(idx >= 0 && idx < buildzoneCards.Count)
+        {
+            for(int i = 0; i < buildzoneCards[idx].cost.Count; i++)
+            {
+                if (buildzoneCards[idx].cost[i] == type && buildzoneCards[idx].built[i] == -1)
+                {
+
+                    if (type < 5 && unusedResources[type] > 0)
+                    {
+                        buildzoneCards[idx].built[i] = gameManager.roundState;
+                        unusedResources[type]--;
+                        break;
+                    }
+                    else if (type == 5 && sergeants > 0)
+                    {
+                        buildzoneCards[idx].built[i] = gameManager.roundState;
+                        sergeants--;
+                        break;
+                    }
+                    else if (type == 6 && businessmen > 0)
+                    {
+                        buildzoneCards[idx].built[i] = gameManager.roundState;
+                        businessmen--;
+                        break;
+                    }
+                    else if (type == 7 && crystanites > 0)
+                    {
+                        buildzoneCards[idx].built[i] = gameManager.roundState;
+                        businessmen--;
+                        break;
+                    }
+                }
+
+            }
+        }
+    }
+
+
 
     public int GetCardTypeCount(int type)
     {
@@ -164,5 +342,6 @@ public class Player : MonoBehaviour
             CalculateScore();
             lastBuilt = builtCards.Count;
         }
+        AutoValidate();
     }
 }

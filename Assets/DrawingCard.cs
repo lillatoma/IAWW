@@ -29,10 +29,7 @@ public class DrawingCard : MonoBehaviour
     public SpriteRenderer specialResource;
     public TMP_Text specialText;
 
-    private void OnMouseDown()
-    {
-        owner.selectedCard = idAtPlayer;
-    }
+
 
 
     [Header("Summoners")]
@@ -62,6 +59,12 @@ public class DrawingCard : MonoBehaviour
     private bool shouldStart = true;
 
 
+
+    private void OnMouseDown()
+    {
+        if(!owner.botControlled)
+            owner.selectedCard = idAtPlayer;
+    }
     public void ClearElements()
     {
         for(int i = addedElements.Count - 1; i >= 0; i--)
@@ -80,10 +83,12 @@ public class DrawingCard : MonoBehaviour
 
     private void OnEnable()
     {
-        if(!hidden)
+        if (!hidden && text != null)
             text.gameObject.SetActive(true);
-        specialText.gameObject.SetActive(true);
-        scoreText.gameObject.SetActive(true);
+        if (specialText != null)
+            specialText.gameObject.SetActive(true);
+        if (scoreText != null)
+            scoreText.gameObject.SetActive(true);
     }
     private void OnDestroy()
     {

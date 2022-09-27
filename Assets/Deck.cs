@@ -7,6 +7,7 @@ using UnityEngine;
 public class Card
 {
     public string name;
+    public int planningRound;
     public int type; // 0 - gray, 1 - black, 2 - green, 3 - yellow, 4 - blue
     public List<int> cost; // 0 - gray, 1 - black, 2 - green, 3 - yellow, 4 - blue, 5 - sergeant, 6 - businessman, 7 - crystanite
     public List<int> built; //0 - planning, 1,2,3,4,5 - resources, +6/round
@@ -80,4 +81,28 @@ public class Deck : MonoBehaviour
         cards = newCards;
     }
 
+
+    public Card TakeCard()
+    {
+        if (cards.Count == 0 && throwawayCards.Count == 0)
+            return null;
+        else if (cards.Count == 0)
+        {
+            for (int i = 0; i < throwawayCards.Count; i++)
+                cards.Add(throwawayCards[i]);
+            throwawayCards.Clear();
+        }
+        int r = Random.Range(0, cards.Count);
+
+        Card card = cards[r];
+        cards.RemoveAt(r);
+
+        return card;
+    }
+
+    public int ThrowCardAway(Card card)
+    {
+        throwawayCards.Add(card);
+        return card.throwAwayReward;
+    }
 }
