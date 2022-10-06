@@ -23,6 +23,16 @@ public class Card
         for (int i = 0; i < cost.Count; i++)
             built.Add(-1);
     }
+
+    public bool NeedsMaterialToBuild(int m)
+    {
+        for(int i = 0; i < cost.Count; i++)
+        {
+            if (cost[i] == m && built[i] == -1)
+                return true;
+        }
+        return false;
+    }
 }
     
 

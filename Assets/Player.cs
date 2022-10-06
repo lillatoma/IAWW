@@ -1,6 +1,5 @@
 using System.Collections;
 using System.Collections.Generic;
-using UnityEditor.Build.Content;
 using UnityEngine;
 
 public class Player : MonoBehaviour
@@ -9,6 +8,8 @@ public class Player : MonoBehaviour
 
     public string playerName;
     public bool botControlled = false;
+    public bool hasToChoosePerson = false;
+
 
     public EmpireCard empireCard;
     public List<Card> builtCards = new List<Card>();
@@ -38,6 +39,9 @@ public class Player : MonoBehaviour
     public int sergeants;
     public int businessmen;
 
+
+    public FullPlayerDrawer drawer;
+
     private int lastBuilt = 0;
     private GameManager gameManager;
     private Deck deck;
@@ -47,6 +51,14 @@ public class Player : MonoBehaviour
     public void AutoValidate()
     {
         if (gameManager.roundState % 7 == 1 && planningCards.Count == 0)
+        {
+            hasValidated = true;
+            for (int i = 0; i < 5; i++)
+                if (unusedResources[i] > 0)
+                    hasValidated = false;
+        }
+
+        else if (gameManager.roundState % 7 > 1)
         {
             hasValidated = true;
             for (int i = 0; i < 5; i++)
@@ -69,6 +81,7 @@ public class Player : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
+        drawer = FindObjectOfType<FullPlayerDrawer>();
         empireCard = FindObjectOfType<EmpireDeck>().PickEmpireCard();
         gameManager = FindObjectOfType<GameManager>();
         deck = FindObjectOfType<Deck>();
@@ -129,6 +142,11 @@ public class Player : MonoBehaviour
             else if (buildzoneCards[idx].buildReward[i] == 2)
                 crystanites++;
         }
+
+        for (int i = 0; i < buildzoneCards[idx].cost.Count; i++)
+            if (buildzoneCards[idx].built[i] == -1)
+                buildzoneCards[idx].built[i] = 1;
+
         builtCards.Add(buildzoneCards[idx]);
         buildzoneCards.RemoveAt(idx);
     }
@@ -181,12 +199,121 @@ public class Player : MonoBehaviour
         }
     }
 
+    public void TakeResourcesOut(int id)
+    {
+        if(id < builtCards.Count)
+        {
+            bool taken = false;
+            for(int i = 0; i < builtCards[id].cost.Count; i++)
+            {
+                Debug.Log("Cost " + i + ": " + builtCards[id].cost[i]);
+                if(builtCards[id].cost[i] < 5 && builtCards[id].built[i] == gameManager.roundState)
+                {
+                    taken = true;
+                    builtCards[id].built[i] = -1;
+                    unusedResources[builtCards[id].cost[i]]++;
+
+                }
+                if (builtCards[id].cost[i] < 5 && (builtCards[id].built[i] == 10000 + gameManager.roundState || taken))
+                {
+                    taken = true;
+                    builtCards[id].built[i] = -1;
+                    crystanites++;
+
+                }
+                else if (builtCards[id].cost[i] == 5 && (builtCards[id].built[i] == gameManager.roundState || taken))
+                {
+                    taken = true;
+                    builtCards[id].built[i] = -1;
+                    sergeants++;
+                }
+                else if (builtCards[id].cost[i] == 6 && (builtCards[id].built[i] == gameManager.roundState || taken))
+                {
+                    taken = true;
+                    builtCards[id].built[i] = -1;
+                    businessmen++;
+                }
+                else if (builtCards[id].cost[i] == 7 && (builtCards[id].built[i] == 10000 + gameManager.roundState || taken))
+                {
+                    taken = true;
+                    builtCards[id].built[i] = -1;
+                    crystanites++;
+                }
+
+
+            }
+
+            if (taken)
+            {
+                buildzoneCards.Add(builtCards[id]);
+                builtCards.RemoveAt(id);
+            }
+        }
+        else
+        {
+            int idx = id - builtCards.Count;
+            if(idx < buildzoneCards.Count)
+            {
+                for (int i = 0; i < buildzoneCards[idx].cost.Count; i++)
+                {
+                    if (buildzoneCards[idx].cost[i] < 5 && buildzoneCards[idx].built[i] == gameManager.roundState)
+                    {
+                        buildzoneCards[idx].built[i] = -1;
+                        unusedResources[buildzoneCards[idx].cost[i]]++;
+
+                    }
+                    if (buildzoneCards[idx].cost[i] < 5 && buildzoneCards[idx].built[i] >= 10000)
+                    {
+                        buildzoneCards[idx].built[i] = -1;
+                        crystanites++;
+
+                    }
+                    else if (buildzoneCards[idx].cost[i] == 5)
+                    {
+                        buildzoneCards[idx].built[i] = -1;
+                        sergeants++;
+                    }
+                    else if (buildzoneCards[idx].cost[i] == 6)
+                    {
+                        buildzoneCards[idx].built[i] = -1;
+                        businessmen++;
+                    }
+                    else if (buildzoneCards[idx].cost[i] == 7)
+                    {
+                        buildzoneCards[idx].built[i] = -1;
+                        crystanites++;
+                    }
+
+                }
+            }
+
+        }
+    }
+
     public void AddResourceToBuild(int id, int type)
     {
         int idx = id - builtCards.Count;
-        if(idx >= 0 && idx < buildzoneCards.Count)
+        
+        if (idx >= 0 && idx < buildzoneCards.Count)
         {
-            for(int i = 0; i < buildzoneCards[idx].cost.Count; i++)
+            Debug.Log("Type is :" + type);
+            if (type == 7 && crystanites > 0)
+            {
+                Debug.Log("Type is 7");
+                for (int i = 0; i < buildzoneCards[idx].cost.Count; i++)
+                {
+                    Debug.Log("Cost " + i + " is " + buildzoneCards[idx].cost[i]);
+                    if ((buildzoneCards[idx].cost[i] == type && buildzoneCards[idx].built[i] == -1)
+                        || (buildzoneCards[idx].cost[i] < 5 && buildzoneCards[idx].built[i] == -1))
+                    {
+                        buildzoneCards[idx].built[i] = 10000 + gameManager.roundState;
+                        crystanites--;
+                        break;
+                    }
+                }
+            }
+            else
+                for (int i = 0; i < buildzoneCards[idx].cost.Count; i++)
             {
                 if (buildzoneCards[idx].cost[i] == type && buildzoneCards[idx].built[i] == -1)
                 {
@@ -217,6 +344,14 @@ public class Player : MonoBehaviour
                     }
                 }
 
+            }
+            bool allSatisfied = true;
+            for (int i = 0; i < buildzoneCards[idx].cost.Count; i++)
+                if (buildzoneCards[idx].built[i] == -1)
+                    allSatisfied = false;
+            if(allSatisfied)
+            {
+                FinishBuilding(idx);
             }
         }
     }
@@ -333,6 +468,36 @@ public class Player : MonoBehaviour
     }
 
 
+    public void ReplaceUnusableMaterial()
+    {
+        for(int i = 0; i < 5; i++)
+        {
+            if (unusedResources[i] > 0)
+            {
+                bool foundCard = false;
+                for(int j = 0; j < buildzoneCards.Count; j++)
+                {
+                    for (int k = 0; k < buildzoneCards[j].cost.Count; k++)
+                        if (buildzoneCards[j].cost[k] == i && buildzoneCards[j].built[k] == -1)
+                            foundCard = true;
+                }
+                if(!foundCard)
+                    for (int j = 0; j < planningCards.Count; j++)
+                    {
+                        for (int k = 0; k < planningCards[j].cost.Count; k++)
+                            if (planningCards[j].cost[k] == i && planningCards[j].built[k] == -1)
+                                foundCard = true;
+                    }
+                if (!foundCard)
+                    for (int j = unusedResources[i] - 1; j >= 0; j--)
+                    {
+                        AddToConversion(i);
+                        unusedResources[i]--;
+                    }
+            }
+        }
+    }
+
     // Update is called once per frame
     void Update()
     {
@@ -343,5 +508,6 @@ public class Player : MonoBehaviour
             lastBuilt = builtCards.Count;
         }
         AutoValidate();
+        ReplaceUnusableMaterial();
     }
 }

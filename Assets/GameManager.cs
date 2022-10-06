@@ -81,8 +81,34 @@ public class GameManager : MonoBehaviour
             var players = GetPlayers();
             for (int i = 0; i < players.Length; i++)
             {
-                players[i].unusedResources[roundState - 2] = players[i].production[roundState - 2];
+                players[i].hasValidated = false;
+                players[i].hasToChoosePerson = false;
+                players[i].unusedResources[roundState % 7 - 2] = players[i].production[roundState % 7- 2];
             }
+
+            bool shouldGive = true;
+            int mostProductionID = 0;
+
+            for (int i = 1; i < players.Length; i++)
+            {
+                if (players[i].production[roundState % 7 - 2] > players[mostProductionID].production[roundState % 7 - 2])
+                {
+                    mostProductionID = i;
+                    shouldGive = true;
+                }
+                else if (players[i].production[roundState % 7- 2] == players[mostProductionID].production[roundState % 7- 2])
+                    shouldGive = false;
+            }
+
+            if (shouldGive && (roundState == 2 || roundState == 5))
+                players[mostProductionID].businessmen++;
+            else if (shouldGive && (roundState == 3 || roundState == 6))
+                players[mostProductionID].sergeants++;
+            else players[mostProductionID].hasToChoosePerson = true;
+
+
+
+
         }
 
         stateSatisfied = true;
@@ -145,6 +171,14 @@ public class GameManager : MonoBehaviour
                         stateSatisfied = false;
                     }
                     
+                }
+                else if (roundState % 7 > 0)
+                {
+                    for (int i = 0; i < players.Length; i++)
+                        players[i].hasValidated = false;
+                    roundState++;
+                    subState = 0;
+                    stateSatisfied = false;
                 }
             }
         }

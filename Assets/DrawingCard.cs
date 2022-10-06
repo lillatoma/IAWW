@@ -64,6 +64,10 @@ public class DrawingCard : MonoBehaviour
     {
         if(!owner.botControlled)
             owner.selectedCard = idAtPlayer;
+        if(owner.drawer.selectedMaterial != -1)
+        {
+            owner.drawer.DoPlayerPlaceMaterial();
+        }
     }
     public void ClearElements()
     {

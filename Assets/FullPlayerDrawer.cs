@@ -6,6 +6,7 @@ using UnityEngine.UIElements;
 public class FullPlayerDrawer : MonoBehaviour
 {
     public Player player;
+    public int selectedMaterial = -1;
     public GameObject cardObject;
 
     public List<DrawingCard> cards = new List<DrawingCard>();
@@ -19,6 +20,16 @@ public class FullPlayerDrawer : MonoBehaviour
     private int lastCardCount;
     private int lastSelected;
 
+    public void DoPlayerTakeOut()
+    {
+        if (player.selectedCard >= 0)
+            player.TakeResourcesOut(player.selectedCard);
+    }
+    public void DoPlayerPlaceMaterial()
+    {
+        if (player.selectedCard >= 0 && selectedMaterial >= 0)
+            player.AddResourceToBuild(player.selectedCard, selectedMaterial);
+    }
     public void DoPlayerChoose()
     {
         if(player.selectedCard >= 0)
@@ -206,5 +217,21 @@ public class FullPlayerDrawer : MonoBehaviour
             else player.selectedCard = -1;
             DrawCards();
         }
+
+        if (selectedMaterial != -1)
+            {
+            if (player.botControlled)
+                selectedMaterial = -1;
+            else if (selectedMaterial < 5 && player.unusedResources[selectedMaterial] <= 0)
+                selectedMaterial = -1;
+            else if (selectedMaterial == 5 && player.sergeants <= 0)
+                selectedMaterial = -1;
+            else if (selectedMaterial == 6 && player.businessmen <= 0)
+            
+                selectedMaterial = -1;
+            else if (selectedMaterial == 7 && player.crystanites <= 0)
+                selectedMaterial = -1;
+        }
+       
     }
 }
